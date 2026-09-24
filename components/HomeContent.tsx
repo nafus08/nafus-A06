@@ -1,0 +1,79 @@
+"use client";
+
+import { ArrowDownRight, LoaderCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+import { WorkoutCard } from "@/components/WorkoutCard";
+import type { Workout } from "@/types/workout";
+
+export function HomeContent() {
+  const [workouts, setWorkouts] = useState<Workout[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    fetch("https://api.abcz.workers.dev/api/fitlog")
+      .then((response) => {
+        if (!response.ok) throw new Error("Failed to fetch");
+        return response.json() as Promise<Workout[]>;
+      })
+      .then((data) => setWorkouts(data))
+      .catch(() => setError("We could not load the library. Please refresh and try again."))
+      .finally(() => setLoading(false));
+  }, []);
+
+  return (
+    <>
+      <section className="mx-auto grid min-h-[calc(100vh-88px)] max-w-7xl items-center gap-8 px-6 py-16 lg:grid-cols-[1.05fr_0.95fr] lg:px-10 lg:py-20">
+        <div>
+          <p className="mb-5 text-xs font-bold tracking-[0.28em] text-lime">WORKOUT LIBRARY</p>
+          <h1 className="max-w-3xl font-display text-5xl font-black uppercase leading-[0.9] tracking-tight sm:text-7xl lg:text-[6.1rem]">
+            Train with intent.<br />
+            Log every set.
+          </h1>
+          <p className="mt-7 max-w-xl text-base leading-7 text-white/60">
+            FitLog is a dark, no-nonsense gym companion: pick a lift, lock it into today&apos;s plan, and watch the week&apos;s work add up.
+          </p>
+          <a href="#library" className="mt-8 inline-flex items-center gap-3 rounded-full bg-lime px-6 py-4 text-xs font-black uppercase tracking-[0.16em] text-ink transition hover:bg-white">
+            Browse workouts <ArrowDownRight size={18} />
+          </a>
+        </div>
+
+        <div className="relative flex items-center justify-center">
+          <div className="absolute h-72 w-72 rounded-full bg-lime/20 blur-3xl" />
+          <img
+            src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80"
+            alt="Athlete training"
+            className="relative w-full max-w-[520px] rounded-[2rem] border border-white/10 object-cover shadow-2xl"
+          />
+        </div>
+      </section>
+
+      <section id="library" className="mx-auto max-w-7xl scroll-mt-24 px-6 py-16 lg:px-10">
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="mb-3 text-xs font-bold tracking-[0.25em] text-lime">12 MOVEMENTS</p>
+            <h2 className="font-display text-4xl font-black uppercase leading-none sm:text-6xl">The library</h2>
+          </div>
+          <p className="max-w-md text-sm leading-6 text-white/50">Twelve lifts covering every major muscle group.</p>
+        </div>
+
+        {loading && (
+          <div className="flex min-h-[200px] items-center justify-center gap-3 text-sm text-white/60">
+            <LoaderCircle className="animate-spin text-lime" size={18} />
+            Loading workouts…
+          </div>
+        )}
+
+        {error && <p className="rounded-xl border border-red-400/30 bg-red-400/10 p-4 text-sm text-red-200">{error}</p>}
+
+        {!loading && !error && (
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {workouts.map((workout) => (
+              <WorkoutCard key={workout.id} workout={workout} />
+            ))}
+          </div>
+        )}
+      </section>
+    </>
+  );
+}
