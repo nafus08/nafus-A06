@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowDownRight, LoaderCircle } from "lucide-react";
+import { ArrowDownRight, LoaderCircle, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { WorkoutCard } from "@/components/WorkoutCard";
 import type { Workout } from "@/types/workout";
@@ -9,6 +9,10 @@ export function HomeContent() {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+  const filteredWorkouts = workouts.filter((workout) =>
+    `${workout.name} ${workout.muscleGroups.join(" ")}`.toLowerCase().includes(search.trim().toLowerCase())
+  );
 
   useEffect(() => {
     fetch("https://api.abcz.workers.dev/api/fitlog")
@@ -57,6 +61,11 @@ export function HomeContent() {
           <p className="max-w-md text-sm leading-6 text-white/50">Twelve lifts covering every major muscle group.</p>
         </div>
 
+        <label className="mb-6 flex max-w-md items-center gap-3 rounded-full border border-white/15 px-4 py-3 text-white/50 focus-within:border-lime">
+          <Search size={16} className="shrink-0 text-lime" />
+          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search workouts or muscle groups" className="w-full bg-transparent text-sm text-white outline-none placeholder:text-white/40" />
+        </label>
+
         {loading && (
           <div className="flex min-h-[200px] items-center justify-center gap-3 text-sm text-white/60">
             <LoaderCircle className="animate-spin text-lime" size={18} />
@@ -68,9 +77,10 @@ export function HomeContent() {
 
         {!loading && !error && (
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {workouts.map((workout) => (
+            {filteredWorkouts.map((workout) => (
               <WorkoutCard key={workout.id} workout={workout} />
             ))}
+            {!filteredWorkouts.length && <p className="col-span-full py-12 text-center text-sm text-white/50">No workouts match that search.</p>}
           </div>
         )}
       </section>

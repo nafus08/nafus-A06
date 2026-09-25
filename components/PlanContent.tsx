@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Check, Clock3, Flame, LoaderCircle, Star, X } from "lucide-react";
+import { Check, ChevronDown, Clock3, Flame, LoaderCircle, Search, Star, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Toast } from "@/components/Toast";
 import { usePlan } from "@/context/PlanContext";
@@ -74,6 +74,7 @@ export function PlanContent() {
   const [sort, setSort] = useState<SortKey>("duration");
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState("");
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     const timer = window.setTimeout(() => setLoading(false), 250);
@@ -82,12 +83,13 @@ export function PlanContent() {
 
   const items = useMemo(() => {
     const source = tab === "plan" ? plan : saved;
-    return [...source].sort((a, b) => {
+    const query = search.trim().toLowerCase();
+    return source.filter((workout) => `${workout.name} ${workout.muscleGroups.join(" ")}`.toLowerCase().includes(query)).sort((a, b) => {
       if (sort === "calories") return b.caloriesBurned - a.caloriesBurned;
       if (sort === "rating") return b.rating - a.rating;
       return b.duration - a.duration;
     });
-  }, [plan, saved, sort, tab]);
+  }, [plan, saved, search, sort, tab]);
 
   const minutes = plan.reduce((sum, item) => sum + item.duration, 0);
   const calories = plan.reduce((sum, item) => sum + item.caloriesBurned, 0);
@@ -127,14 +129,21 @@ export function PlanContent() {
         </div>
       </div>
 
-      <div className="mt-8 flex justify-end">
+      <div className="mt-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <label className="flex max-w-md items-center gap-3 rounded-full border border-white/15 px-4 py-3 text-white/50 focus-within:border-lime">
+          <Search size={16} className="shrink-0 text-lime" />
+          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search workouts or muscle groups" className="w-full bg-transparent text-sm text-white outline-none placeholder:text-white/40" />
+        </label>
         <label className="flex items-center gap-3 text-[10px] uppercase tracking-[0.2em] text-white/50">
-          Sort by
-          <select value={sort} onChange={(event) => setSort(event.target.value as SortKey)} className="rounded-full border border-white/20 bg-[#121212] px-3 py-2 text-white">
-            <option value="duration">Duration</option>
-            <option value="calories">Calories</option>
-            <option value="rating">Rating</option>
-          </select>
+          Sort By
+          <span className="relative">
+            <select value={sort} onChange={(event) => setSort(event.target.value as SortKey)} className="appearance-none rounded-full border border-white/20 bg-[#121212] py-2 pl-3 pr-9 text-white">
+              <option value="duration">Duration</option>
+              <option value="calories">Calories</option>
+              <option value="rating">Rating</option>
+            </select>
+            <ChevronDown size={14} aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-lime" />
+          </span>
         </label>
       </div>
 
@@ -150,13 +159,15 @@ export function PlanContent() {
           ))
         ) : (
           <div className="rounded-2xl border border-dashed border-white/20 px-6 py-16 text-center">
-            <h2 className="font-display text-4xl font-black uppercase">Nothing here yet</h2>
+            <h2 className="font-display text-4xl font-black uppercase">{search ? "No matching workouts" : "Nothing here yet"}</h2>
             <p className="mx-auto mt-3 max-w-sm text-sm text-white/50">
-              Browse the library and add a lift to get today moving.
+              {search ? "Try another workout name or muscle group." : "Browse the library and add a lift to get today moving."}
             </p>
-            <Link href="/" className="mt-6 inline-block rounded-full bg-lime px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-ink">
-              Go to workouts
-            </Link>
+            {!search && (
+              <Link href="/" className="mt-6 inline-block rounded-full bg-lime px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-ink">
+                Go to workouts
+              </Link>
+            )}
           </div>
         )}
       </div>

@@ -20,6 +20,7 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
   const [plan, setPlan] = useState<Workout[]>([]);
   const [saved, setSaved] = useState<Workout[]>([]);
   const [completed, setCompleted] = useState<number[]>([]);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     const read = (key: string) => {
@@ -29,19 +30,23 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
     setPlan(read("fitlog-plan"));
     setSaved(read("fitlog-saved"));
     setCompleted(read("fitlog-completed"));
+    setHydrated(true);
   }, []);
 
   useEffect(() => {
+    if (!hydrated) return;
     window.localStorage.setItem("fitlog-plan", JSON.stringify(plan));
-  }, [plan]);
+  }, [hydrated, plan]);
 
   useEffect(() => {
+    if (!hydrated) return;
     window.localStorage.setItem("fitlog-saved", JSON.stringify(saved));
-  }, [saved]);
+  }, [hydrated, saved]);
 
   useEffect(() => {
+    if (!hydrated) return;
     window.localStorage.setItem("fitlog-completed", JSON.stringify(completed));
-  }, [completed]);
+  }, [completed, hydrated]);
 
   const value = useMemo<PlanContextValue>(() => ({
     plan,
