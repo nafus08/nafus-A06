@@ -5,14 +5,32 @@ import { useEffect, useState } from "react";
 import { WorkoutCard } from "@/components/WorkoutCard";
 import type { Workout } from "@/types/workout";
 
+type SortOption = "default" | "name" | "rating" | "duration" | "calories";
+
 export function HomeContent() {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
-  const filteredWorkouts = workouts.filter((workout) =>
-    `${workout.name} ${workout.muscleGroups.join(" ")}`.toLowerCase().includes(search.trim().toLowerCase())
-  );
+  const [sort, setSort] = useState<SortOption>("default");
+  const filteredWorkouts = workouts
+    .filter((workout) =>
+      `${workout.name} ${workout.muscleGroups.join(" ")}`.toLowerCase().includes(search.trim().toLowerCase())
+    )
+    .sort((first, second) => {
+      switch (sort) {
+        case "name":
+          return first.name.localeCompare(second.name);
+        case "rating":
+          return second.rating - first.rating;
+        case "duration":
+          return first.duration - second.duration;
+        case "calories":
+          return second.caloriesBurned - first.caloriesBurned;
+        default:
+          return 0;
+      }
+    });
 
   useEffect(() => {
     fetch("https://api.abcz.workers.dev/api/fitlog")
@@ -61,10 +79,22 @@ export function HomeContent() {
           <p className="max-w-md text-sm leading-6 text-white/50">Twelve lifts covering every major muscle group.</p>
         </div>
 
-        <label className="mb-6 flex max-w-md items-center gap-3 rounded-full border border-white/15 px-4 py-3 text-white/50 focus-within:border-lime">
-          <Search size={16} className="shrink-0 text-lime" />
-          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search workouts or muscle groups" className="w-full bg-transparent text-sm text-white outline-none placeholder:text-white/40" />
-        </label>
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row">
+          <label className="flex max-w-md flex-1 items-center gap-3 rounded-full border border-white/15 px-4 py-3 text-white/50 focus-within:border-lime">
+            <Search size={16} className="shrink-0 text-lime" />
+            <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search workouts or muscle groups" className="w-full bg-transparent text-sm text-white outline-none placeholder:text-white/40" />
+          </label>
+          <label className="flex items-center gap-3 rounded-full border border-white/15 px-4 py-3 text-xs font-bold uppercase tracking-[0.12em] text-white/50 focus-within:border-lime">
+            <span className="whitespace-nowrap">Sort by</span>
+            <select value={sort} onChange={(event) => setSort(event.target.value as SortOption)} className="w-full cursor-pointer bg-transparent text-xs font-bold uppercase tracking-[0.12em] text-white outline-none">
+              <option value="default" className="bg-ink">Featured</option>
+              <option value="name" className="bg-ink">Name</option>
+              <option value="rating" className="bg-ink">Rating</option>
+              <option value="duration" className="bg-ink">Shortest duration</option>
+              <option value="calories" className="bg-ink">Most calories</option>
+            </select>
+          </label>
+        </div>
 
         {loading && (
           <div className="flex min-h-[200px] items-center justify-center gap-3 text-sm text-white/60">
